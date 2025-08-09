@@ -16,15 +16,17 @@
     <link rel="icon" href="/kime/kime_icon.svg" />
 
   <style>
-    #splash-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:#0E0E11;display:flex;justify-content:center;align-items:center;z-index:9999;transition:opacity .8s}
-    #splash-logo{width:120px;height:120px;transform:scale(.95)}
-    .animate-logo{animation:pulse 1.5s infinite ease-in-out}
-    @keyframes pulse{0%,100%{transform:scale(.95)}50%{transform:scale(1.05)}}
-    body.loading #root{opacity:0;transform:scale(.96)}
-    #root{transition:all .4s cubic-bezier(.16,1,.3,1);opacity:1;transform:scale(1);transform-origin:center;will-change:transform,opacity}
+    /* Minimal splash */
+    #splash-screen{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:#0E0E11;z-index:9999;}
+    body.loading #root{opacity:0;transform:scale(.985);}
+    #root{transition:opacity .28s ease,transform .32s cubic-bezier(.16,1,.3,1);}
+    #splash-logo{width:108px;height:108px;opacity:0;transform:scale(.9);animation:splashIn .36s cubic-bezier(.55,.1,.3,1) forwards;}
+    .fade-out{opacity:0 !important;transition:opacity .2s ease,transform .25s ease !important;transform:scale(.97);pointer-events:none;}
+    @keyframes splashIn{0%{opacity:0;transform:scale(.9)}70%{opacity:1;transform:scale(1.02)}100%{opacity:1;transform:scale(1)}}
+    @media (prefers-reduced-motion:reduce){#splash-logo{animation:none;opacity:1;transform:none}}
   </style>
-    <script type="module" crossorigin src="/kime/assets/index-Dx3nzvmE.js"></script>
-    <link rel="stylesheet" crossorigin href="/kime/assets/index-Xpude5JR.css">
+    <script type="module" crossorigin src="/kime/assets/index-iOXzGFVc.js"></script>
+    <link rel="stylesheet" crossorigin href="/kime/assets/index-CpzwNeZr.css">
   </head>
 
   <body class="loading">
@@ -38,34 +40,28 @@
     <div id="root"></div>
     
     <script>
-      document.addEventListener('DOMContentLoaded',function(){
-        const logo=document.getElementById('splash-logo');
-        logo.offsetHeight;logo.classList.add('animate-logo');
-        const check=setInterval(()=>{
-          if(document.getElementById('root').children.length>0){
+      document.addEventListener('DOMContentLoaded',()=>{
+        const splash=document.getElementById('splash-screen');
+        const rootEl=document.getElementById('root');
+        const start=performance.now();
+        const MIN=90; // ms min
+        const FALLBACK=1000; // fallback plus court
+        let finished=false;
+        const finish=()=>{
+          if(finished) return; finished=true;
+          const elapsed=performance.now()-start;
+            const wait = elapsed<MIN?MIN-elapsed:0;
             setTimeout(()=>{
-              const splash=document.getElementById('splash-screen');
-              splash.style.opacity='0';
-              setTimeout(()=>{
-                document.body.classList.remove('loading');
-                setTimeout(()=>splash.remove(),400);
-              },400);
-              clearInterval(check);
-            },2000);
-          }
-        },100);
-        setTimeout(()=>{
-          clearInterval(check);
-          const splash=document.getElementById('splash-screen');
-          if (splash) {
-            splash.style.opacity='0';
-            setTimeout(()=>{
+              splash?.classList.add('fade-out');
               document.body.classList.remove('loading');
-              setTimeout(()=>splash.remove(),400);
-            },400);
-          }
-          clearInterval(check);
-        },8000);
+              setTimeout(()=>splash?.remove(),200);
+            },wait);
+        };
+        if(rootEl){
+          const mo=new MutationObserver(()=>{ if(rootEl.children.length>0){ mo.disconnect(); finish(); } });
+          mo.observe(rootEl,{childList:true});
+        }
+        setTimeout(finish,FALLBACK);
       });
     </script>
   </body>
